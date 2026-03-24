@@ -1,4 +1,9 @@
-
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>作業報告書ジェネレーター</title>
 <style>
 :root {
   --color-text-primary: #1a1a1a;
@@ -22,6 +27,7 @@
   --font-sans: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
 }
 * { box-sizing: border-box; }
+body { font-family: var(--font-sans); max-width: 680px; margin: 0 auto; padding: 20px 16px; background: #fafafa; color: var(--color-text-primary); }
 .tabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
 .tab { font-size: 12px; padding: 5px 13px; border-radius: 99px; border: 0.5px solid var(--color-border-secondary); background: none; color: var(--color-text-secondary); cursor: pointer; transition: all .15s; }
 .tab.on { background: var(--color-text-primary); color: var(--color-background-primary); border-color: transparent; }
@@ -34,9 +40,11 @@
 .field input:focus, .field select:focus { border-color: var(--color-border-primary); }
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.highlight-box { background: var(--color-background-warning); border-radius: var(--border-radius-md); padding: 12px 14px; margin-bottom: 12px; }
+.highlight-box .slbl { color: var(--color-text-warning); margin-bottom: 6px; }
 .client-selector { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
-.client-chip { font-size: 12px; padding: 5px 12px; border-radius: 99px; border: 0.5px solid var(--color-border-secondary); background: none; color: var(--color-text-secondary); cursor: pointer; transition: all .15s; }
-.client-chip.on { background: var(--color-background-info); color: var(--color-text-info); border-color: var(--color-border-secondary); }
+.client-chip { font-size: 12px; padding: 5px 12px; border-radius: 99px; border: 0.5px solid var(--color-border-secondary); background: none; color: var(--color-text-secondary); cursor: pointer; }
+.client-chip.on { background: var(--color-background-info); color: var(--color-text-info); }
 .client-chip.add { color: var(--color-text-tertiary); border-style: dashed; }
 .task-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
 .task-item { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 8px 10px; display: flex; gap: 8px; align-items: center; }
@@ -47,7 +55,12 @@
 .task-del:hover { color: var(--color-text-danger); }
 .add-btn { font-size: 12px; color: var(--color-text-info); background: none; border: 0.5px dashed var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 6px 12px; cursor: pointer; width: 100%; margin-bottom: 10px; }
 .add-btn:hover { background: var(--color-background-info); }
-.total-bar { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 8px 12px; font-size: 12px; color: var(--color-text-secondary); margin-bottom: 10px; display: flex; justify-content: space-between; }
+.summary-bar { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 8px 12px; font-size: 12px; margin-bottom: 10px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.summary-item { text-align: center; }
+.summary-label { font-size: 10px; color: var(--color-text-tertiary); margin: 0 0 2px; }
+.summary-val { font-size: 13px; font-weight: 500; color: var(--color-text-primary); margin: 0; }
+.summary-val.over { color: var(--color-text-danger); }
+.summary-val.ok { color: var(--color-text-success); }
 .btn-row { display: flex; gap: 8px; margin-bottom: 10px; }
 .save-btn { font-size: 12px; color: var(--color-text-success); background: none; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 7px 12px; cursor: pointer; }
 .save-btn:hover { background: var(--color-background-success); }
@@ -57,16 +70,15 @@
 .loading { font-size: 12px; color: var(--color-text-tertiary); text-align: center; padding: 10px; display: none; }
 .result-wrap { display: none; }
 .result-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 10px; }
-.result-table th { font-size: 11px; color: var(--color-text-tertiary); font-weight: 500; text-align: left; padding: 5px 8px; border-bottom: 0.5px solid var(--color-border-tertiary); }
-.result-table td { padding: 5px 8px; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.result-table th { font-size: 11px; color: var(--color-text-tertiary); font-weight: 500; text-align: left; padding: 5px 8px; border-bottom: 0.5px solid var(--color-border-tertiary); background: var(--color-background-secondary); }
+.result-table td { padding: 5px 8px; border-bottom: 0.5px solid var(--color-border-tertiary); vertical-align: top; }
 .result-table td input { width: 100%; border: none; background: none; font-size: 12px; color: var(--color-text-primary); padding: 0; outline: none; }
 .result-table td input:focus { background: var(--color-background-secondary); border-radius: 4px; padding: 2px 4px; }
 .result-table tr:last-child td { border-bottom: none; }
-.warn-row td { color: var(--color-text-warning); background: var(--color-background-warning); }
 .action-row { display: flex; gap: 8px; margin-top: 8px; }
 .action-btn { flex: 1; font-size: 12px; color: var(--color-text-info); background: none; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 7px 12px; cursor: pointer; }
 .action-btn:hover { background: var(--color-background-info); }
-.dl-btn { flex: 1; font-size: 12px; font-weight: 500; color: var(--color-background-primary); background: var(--color-text-success); border: none; border-radius: var(--border-radius-md); padding: 7px 12px; cursor: pointer; }
+.dl-btn { flex: 1; font-size: 12px; font-weight: 500; color: #fff; background: var(--color-text-success); border: none; border-radius: var(--border-radius-md); padding: 7px 12px; cursor: pointer; }
 .dl-btn:hover { opacity: .85; }
 .history-list { display: flex; flex-direction: column; gap: 8px; }
 .history-item { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; border: 0.5px solid var(--color-border-tertiary); }
@@ -87,8 +99,9 @@
 .empty { text-align: center; padding: 24px; font-size: 12px; color: var(--color-text-tertiary); }
 hr.d { border: none; border-top: 0.5px solid var(--color-border-tertiary); margin: 12px 0; }
 </style>
+</head>
+<body>
 
-<div style="padding:2px 0 0">
 <div class="tabs">
   <button class="tab on" onclick="sw(0)">📝 報告書を作る</button>
   <button class="tab" onclick="sw(1)">📁 履歴</button>
@@ -99,27 +112,30 @@ hr.d { border: none; border-top: 0.5px solid var(--color-border-tertiary); margi
   <p class="slbl">クライアントを選ぶ</p>
   <div class="client-selector" id="client-selector"></div>
   <hr class="d">
-  <p class="slbl">基本情報</p>
-  <div class="row2">
-    <div class="field"><label>氏名</label><input type="text" id="name" placeholder="山田 太郎"></div>
-    <div class="field"><label>対象月</label><input type="month" id="month"></div>
-  </div>
-  <div class="row2">
-    <div class="field"><label>稼働日数（日）</label><input type="number" id="workdays" placeholder="20" min="1" max="31"></div>
-    <div class="field"><label>稼働パターン</label>
-      <select id="pattern">
-        <option value="weekday">平日メイン</option>
-        <option value="flexible">フレキシブル</option>
-        <option value="threeday">週3日ペース</option>
-      </select>
+  <div class="highlight-box">
+    <p class="slbl">📅 今月の稼働情報</p>
+    <div class="row3">
+      <div class="field"><label>氏名</label><input type="text" id="name" placeholder="山田 太郎"></div>
+      <div class="field"><label>対象月</label><input type="month" id="month"></div>
+      <div class="field"><label>総稼働時間（h）</label><input type="number" id="total-hours" placeholder="160" min="1" onchange="updateSummary()"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>稼働日数（日）</label><input type="number" id="workdays" placeholder="20" min="1" max="31" onchange="updateSummary()"></div>
+      <div class="field"><label>稼働パターン</label>
+        <select id="pattern">
+          <option value="weekday">平日メイン</option>
+          <option value="flexible">フレキシブル</option>
+          <option value="threeday">週3日ペース</option>
+        </select>
+      </div>
     </div>
   </div>
   <hr class="d">
-  <p class="slbl">作業テンプレート</p>
-  <div class="info">💾 保存すると次回から自動で読み込まれます</div>
+  <p class="slbl">作業の種類と時間（わかっている分だけ入れる）</p>
+  <div class="info">💡 合計が総稼働時間に足りない分は「その他作業」で自動補完。1日に複数の作業を組み合わせて割り振ります。</div>
   <div class="row3">
     <div class="field"><label>作業名</label><input type="text" id="t-name" placeholder="LP修正"></div>
-    <div class="field"><label>合計時間（h）</label><input type="number" id="t-hours" placeholder="20" min="0.5" step="0.5"></div>
+    <div class="field"><label>合計時間（h）</label><input type="number" id="t-hours" placeholder="20" min="0.5" step="0.5" onchange="updateSummary()"></div>
     <div class="field"><label>種別</label>
       <select id="t-type">
         <option value="dev">開発・制作系</option>
@@ -131,15 +147,16 @@ hr.d { border: none; border-top: 0.5px solid var(--color-border-tertiary); margi
   </div>
   <button class="add-btn" onclick="addTask()">＋ 作業を追加</button>
   <div class="task-list" id="task-list"></div>
-  <div class="total-bar" id="total-bar" style="display:none">
-    <span>合計時間</span>
-    <span id="total-val" style="font-weight:500;color:var(--color-text-primary)">0h</span>
+  <div class="summary-bar" id="summary-bar" style="display:none">
+    <div class="summary-item"><p class="summary-label">総稼働時間</p><p class="summary-val" id="s-total">-</p></div>
+    <div class="summary-item"><p class="summary-label">入力済み時間</p><p class="summary-val" id="s-input">-</p></div>
+    <div class="summary-item"><p class="summary-label">その他で補完</p><p class="summary-val" id="s-other">-</p></div>
   </div>
   <div class="btn-row">
     <button class="save-btn" onclick="saveTemplate()">💾 保存</button>
     <button class="gen-btn" id="gen-btn" onclick="generate()" disabled>AIで報告書を生成する</button>
   </div>
-  <div class="loading" id="loading">AIが日付に割り振り中...</div>
+  <div class="loading" id="loading">AIが1日ごとに割り振り中...</div>
   <div class="result-wrap" id="result-wrap">
     <hr class="d">
     <p class="slbl">生成された報告書（クリックして編集できます）</p>
@@ -180,7 +197,6 @@ hr.d { border: none; border-top: 0.5px solid var(--color-border-tertiary); margi
   </div>
   <button class="add-btn" onclick="testNotification()">🔔 テスト通知を送る</button>
 </div>
-</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
@@ -190,11 +206,32 @@ let tasks = [], clients = [], currentClient = null;
 const today = new Date();
 document.getElementById('month').value = today.toISOString().slice(0,7);
 document.getElementById('workdays').value = 20;
+document.getElementById('total-hours').value = 160;
 
 function sw(n) {
   document.querySelectorAll('.pnl').forEach((e,i) => e.classList.toggle('on', i===n));
   document.querySelectorAll('.tab').forEach((e,i) => e.classList.toggle('on', i===n));
   if (n===1) renderHistory();
+}
+
+function updateSummary() {
+  const total = parseFloat(document.getElementById('total-hours').value) || 0;
+  const inputted = tasks.reduce((s,t) => s+t.hours, 0);
+  const other = Math.max(0, total - inputted);
+  const bar = document.getElementById('summary-bar');
+  if (total > 0) {
+    bar.style.display = 'grid';
+    document.getElementById('s-total').textContent = total + 'h';
+    const inputEl = document.getElementById('s-input');
+    inputEl.textContent = inputted + 'h';
+    inputEl.className = 'summary-val' + (inputted > total ? ' over' : '');
+    const otherEl = document.getElementById('s-other');
+    otherEl.textContent = other.toFixed(1) + 'h';
+    otherEl.className = 'summary-val' + (other === 0 ? ' ok' : '');
+  } else {
+    bar.style.display = 'none';
+  }
+  document.getElementById('gen-btn').disabled = (tasks.length === 0 && total === 0);
 }
 
 async function loadClients() {
@@ -217,9 +254,8 @@ function renderClients() {
 
 async function selectClient(id) {
   currentClient = id; tasks = [];
-  renderClients(); renderTasks();
+  renderClients(); renderTasks(); updateSummary();
   document.getElementById('result-wrap').style.display = 'none';
-  document.getElementById('gen-btn').disabled = true;
   await loadTemplate();
 }
 
@@ -230,7 +266,7 @@ async function addClient() {
   clients.push({ id, name });
   await saveClients();
   currentClient = id; tasks = [];
-  renderClients(); renderTasks();
+  renderClients(); renderTasks(); updateSummary();
 }
 
 async function loadTemplate() {
@@ -240,8 +276,10 @@ async function loadTemplate() {
     const s = JSON.parse(r.value);
     if (s.name) document.getElementById('name').value = s.name;
     if (s.workdays) document.getElementById('workdays').value = s.workdays;
+    if (s.totalHours) document.getElementById('total-hours').value = s.totalHours;
     if (s.pattern) document.getElementById('pattern').value = s.pattern;
-    if (s.tasks?.length) { tasks = s.tasks; renderTasks(); document.getElementById('gen-btn').disabled = false; }
+    if (s.tasks?.length) { tasks = s.tasks; renderTasks(); }
+    updateSummary();
   } catch(e) {}
 }
 
@@ -250,6 +288,7 @@ async function saveTemplate() {
     await window.storage.set('template_' + currentClient, JSON.stringify({
       name: document.getElementById('name').value,
       workdays: document.getElementById('workdays').value,
+      totalHours: document.getElementById('total-hours').value,
       pattern: document.getElementById('pattern').value,
       tasks
     }));
@@ -265,15 +304,13 @@ function addTask() {
   const type = document.getElementById('t-type').value;
   if (!name || !hours) { alert('作業名と時間を入力してください'); return; }
   tasks.push({ name, hours, type });
-  renderTasks();
+  renderTasks(); updateSummary();
   document.getElementById('t-name').value = '';
   document.getElementById('t-hours').value = '';
-  document.getElementById('gen-btn').disabled = false;
 }
 
 function removeTask(i) {
-  tasks.splice(i, 1); renderTasks();
-  if (!tasks.length) document.getElementById('gen-btn').disabled = true;
+  tasks.splice(i, 1); renderTasks(); updateSummary();
 }
 
 function renderTasks() {
@@ -284,9 +321,6 @@ function renderTasks() {
       <span class="task-type">${typeLabel[t.type]}</span>
       <button class="task-del" onclick="removeTask(${i})">削除</button>
     </div>`).join('');
-  const total = tasks.reduce((s,t) => s+t.hours, 0);
-  document.getElementById('total-bar').style.display = tasks.length ? 'flex' : 'none';
-  document.getElementById('total-val').textContent = total + 'h';
 }
 
 function getDatesInMonth(yearMonth, workdays, pattern) {
@@ -305,16 +339,14 @@ function getDatesInMonth(yearMonth, workdays, pattern) {
 
 function getDow(date) { return ['日','月','火','水','木','金','土'][date.getDay()]; }
 
-function parseTime(timeRange) {
-  const parts = timeRange.split('-');
-  return { start: parts[0]?.trim() || '', end: parts[1]?.trim() || '' };
-}
-
 async function generate() {
   const name = document.getElementById('name').value || '担当者';
   const month = document.getElementById('month').value;
   const workdays = parseInt(document.getElementById('workdays').value) || 20;
+  const totalHours = parseFloat(document.getElementById('total-hours').value) || 160;
   const pattern = document.getElementById('pattern').value;
+  const inputtedHours = tasks.reduce((s,t) => s+t.hours, 0);
+  const otherHours = Math.max(0, totalHours - inputtedHours);
   const btn = document.getElementById('gen-btn');
 
   btn.disabled = true;
@@ -322,18 +354,36 @@ async function generate() {
   document.getElementById('result-wrap').style.display = 'none';
 
   const dates = getDatesInMonth(month, workdays, pattern);
-  const prompt = `フリーランスの月次作業報告書の日付割り振りをしてください。
-担当者：${name}、対象月：${month}
+  const avgHoursPerDay = (totalHours / workdays).toFixed(1);
+  const allTasks = [...tasks];
+  if (otherHours > 0) allTasks.push({ name: 'その他作業', hours: otherHours, type: 'other' });
+
+  const prompt = `フリーランスの月次作業報告書を作成してください。
+
+担当者：${name}
+対象月：${month}
 稼働日：${dates.map(d=>d.getDate()+'日').join('、')}
-作業：${tasks.map(t=>`${t.name}(${typeLabel[t.type]})${t.hours}h`).join('、')}
-JSONのみ返してください：{"rows":[{"day":数字,"timeRange":"9:00-18:00","work":"作業内容"},...],"adjustNote":"補足or空文字"}
-ルール：ミーティングは1h（例13:00-14:00）、開発系は長め（例9:00-18:00）、時間が合わない場合はその他・調整で補完、workはビジネス日本語で`;
+1日の平均稼働時間：${avgHoursPerDay}時間
+総稼働時間：${totalHours}時間
+
+作業の種類と月間合計時間：
+${allTasks.map(t=>`・${t.name}（${typeLabel[t.type]}）：合計${t.hours}時間`).join('\n')}
+
+以下のJSONのみ返してください。他の文字は一切含めないでください：
+{"rows":[{"day":数字,"start":"9:00","end":"18:00","work":"作業内容（複数作業をカンマ区切り）"},...],"note":"補足があれば"}
+
+重要なルール：
+- 1日に必ず複数の作業を組み合わせること
+- ミーティングだけの日はNG、必ず他の作業と組み合わせること
+- 1日の稼働時間は${avgHoursPerDay}時間前後になるようにstart/endを設定
+- 月間合計が総稼働時間${totalHours}時間に近くなるように調整
+- workはビジネス日本語で自然な表現で`;
 
   try {
     const res = await fetch('/api/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 2000, messages: [{ role:'user', content: prompt }] })
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 3000, messages: [{ role:'user', content: prompt }] })
     });
     const data = await res.json();
     const parsed = JSON.parse(data.content[0].text.replace(/```json|```/g,'').trim());
@@ -341,23 +391,21 @@ JSONのみ返してください：{"rows":[{"day":数字,"timeRange":"9:00-18:00
 
     window._currentResult = { month, name, client: currentClient, rows: parsed.rows };
 
-    document.getElementById('result-body').innerHTML = parsed.rows.map((row) => {
+    document.getElementById('result-body').innerHTML = parsed.rows.map(row => {
       const date = new Date(year, mon-1, row.day);
-      const { start, end } = parseTime(row.timeRange);
-      const isOther = row.work.includes('その他') || row.work.includes('調整');
-      return `<tr class="${isOther?'warn-row':''}">
+      return `<tr>
         <td>${month.replace('-','/')}/${String(row.day).padStart(2,'0')}</td>
         <td>${getDow(date)}</td>
-        <td><input value="${start}"></td>
-        <td><input value="${end}"></td>
+        <td><input value="${row.start||''}"></td>
+        <td><input value="${row.end||''}"></td>
         <td><input value="${row.work}"></td>
       </tr>`;
     }).join('');
 
     const notice = document.getElementById('adjust-notice');
-    if (parsed.adjustNote) {
+    if (parsed.note) {
       notice.style.display = 'block';
-      notice.innerHTML = `<div style="background:var(--color-background-warning);border-radius:var(--border-radius-md);padding:8px 12px;font-size:11px;color:var(--color-text-warning)">${parsed.adjustNote}</div>`;
+      notice.innerHTML = `<div style="background:var(--color-background-info);border-radius:var(--border-radius-md);padding:8px 12px;font-size:11px;color:var(--color-text-info)">${parsed.note}</div>`;
     } else { notice.style.display = 'none'; }
 
     document.getElementById('result-wrap').style.display = 'block';
@@ -371,47 +419,32 @@ function getTableRows() {
   return Array.from(document.querySelectorAll('#result-body tr')).map(tr => {
     const inputs = tr.querySelectorAll('input');
     const cells = tr.querySelectorAll('td');
-    return {
-      date: cells[0].textContent,
-      dow: cells[1].textContent,
-      start: inputs[0].value,
-      end: inputs[1].value,
-      work: inputs[2].value
-    };
+    return { date: cells[0].textContent, dow: cells[1].textContent, start: inputs[0].value, end: inputs[1].value, work: inputs[2].value };
   });
 }
 
 function downloadExcel() {
   const month = document.getElementById('month').value;
   const name = document.getElementById('name').value || '担当者';
-  const clientName = clients.find(c => c.id === currentClient)?.name || 'クライアント';
+  const clientName = clients.find(c=>c.id===currentClient)?.name || 'クライアント';
   const rows = getTableRows();
-
-  const wsData = [
-    ['日付', '曜日', '開始時間', '終了時間', '作業内容'],
-    ...rows.map(r => [r.date, r.dow, r.start, r.end, r.work])
-  ];
-
+  const wsData = [['日付','曜日','開始時間','終了時間','作業内容'], ...rows.map(r=>[r.date,r.dow,r.start,r.end,r.work])];
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(wsData);
-
-  // 列幅設定
-  ws['!cols'] = [{ wch: 12 }, { wch: 6 }, { wch: 10 }, { wch: 10 }, { wch: 40 }];
-
+  ws['!cols'] = [{wch:12},{wch:6},{wch:10},{wch:10},{wch:40}];
   XLSX.utils.book_append_sheet(wb, ws, month);
   XLSX.writeFile(wb, `作業報告書_${clientName}_${month}_${name}.xlsx`);
 }
 
 function copyTSV() {
   const rows = getTableRows();
-  const tsv = rows.map(r => [r.date, r.dow, r.start, r.end, r.work].join('\t')).join('\n');
-  navigator.clipboard.writeText(tsv).then(() => alert('コピーしました！スプレッドシートに貼り付けできます。'));
+  const tsv = rows.map(r=>[r.date,r.dow,r.start,r.end,r.work].join('\t')).join('\n');
+  navigator.clipboard.writeText(tsv).then(() => alert('コピーしました！'));
 }
 
 async function saveHistory() {
   if (!window._currentResult) return;
-  const rows = getTableRows();
-  const entry = { id: Date.now(), ...window._currentResult, rows, savedAt: new Date().toLocaleDateString('ja-JP') };
+  const entry = { id: Date.now(), ...window._currentResult, rows: getTableRows(), savedAt: new Date().toLocaleDateString('ja-JP') };
   try {
     const r = await window.storage.get('history');
     const existing = r ? JSON.parse(r.value) : [];
@@ -430,12 +463,9 @@ async function renderHistory() {
     const el = document.getElementById('history-list');
     if (!list.length) { el.innerHTML = '<div class="empty">まだ履歴がありません</div>'; return; }
     el.innerHTML = '<div class="history-list">' + list.map(item => {
-      const cName = clients.find(c => c.id === item.client)?.name || 'クライアント';
+      const cName = clients.find(c=>c.id===item.client)?.name||'クライアント';
       return `<div class="history-item" onclick="loadHistory(${item.id})">
-        <div>
-          <p class="history-title">${item.month} ${cName}</p>
-          <p class="history-meta">${item.name}・${item.rows?.length||0}日分・${item.savedAt}</p>
-        </div>
+        <div><p class="history-title">${item.month} ${cName}</p><p class="history-meta">${item.name}・${item.rows?.length||0}日分・${item.savedAt}</p></div>
         <button class="history-del" onclick="event.stopPropagation();deleteHistory(${item.id})">削除</button>
       </div>`;
     }).join('') + '</div>';
@@ -446,12 +476,12 @@ async function loadHistory(id) {
   try {
     const r = await window.storage.get('history');
     const list = r ? JSON.parse(r.value) : [];
-    const item = list.find(i => i.id===id);
+    const item = list.find(i=>i.id===id);
     if (!item) return;
     sw(0);
     document.getElementById('month').value = item.month;
     window._currentResult = item;
-    document.getElementById('result-body').innerHTML = item.rows.map(row => `
+    document.getElementById('result-body').innerHTML = item.rows.map(row=>`
       <tr><td>${row.date}</td><td>${row.dow}</td>
       <td><input value="${row.start||''}"></td>
       <td><input value="${row.end||''}"></td>
@@ -465,7 +495,7 @@ async function deleteHistory(id) {
   try {
     const r = await window.storage.get('history');
     const list = r ? JSON.parse(r.value) : [];
-    await window.storage.set('history', JSON.stringify(list.filter(i => i.id!==id)));
+    await window.storage.set('history', JSON.stringify(list.filter(i=>i.id!==id)));
     renderHistory();
   } catch(e) {}
 }
@@ -504,6 +534,18 @@ async function sendNotification(title, body) {
   else alert('通知の許可が必要です');
 }
 
+// localStorageをwindow.storageに見立てたフォールバック
+if (!window.storage) {
+  window.storage = {
+    get: async (key) => { const v = localStorage.getItem(key); return v ? { value: v } : null; },
+    set: async (key, value) => { localStorage.setItem(key, value); return { value }; },
+    delete: async (key) => { localStorage.removeItem(key); return { deleted: true }; }
+  };
+}
+
 loadClients();
 loadReminder();
 </script>
+</body>
+</html>
+

@@ -330,7 +330,7 @@ JSONのみ返してください：{"rows":[{"day":数字,"timeRange":"9:00-18:00
 ルール：ミーティングは1h（例13:00-14:00）、開発系は長め（例9:00-18:00）、時間が合わない場合はその他・調整で補完、workはビジネス日本語で`;
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch('/api/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 2000, messages: [{ role:'user', content: prompt }] })

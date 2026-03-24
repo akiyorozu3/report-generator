@@ -43,19 +43,19 @@
 .result-table tr:last-child td { border-bottom: none; }
 .warn-row td { color: var(--color-text-warning); background: var(--color-background-warning); }
 .action-row { display: flex; gap: 8px; margin-top: 8px; }
-.copy-btn { flex: 1; font-size: 12px; color: var(--color-text-info); background: none; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 7px 12px; cursor: pointer; }
-.copy-btn:hover { background: var(--color-background-info); }
+.action-btn { flex: 1; font-size: 12px; color: var(--color-text-info); background: none; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 7px 12px; cursor: pointer; }
+.action-btn:hover { background: var(--color-background-info); }
+.dl-btn { flex: 1; font-size: 12px; font-weight: 500; color: var(--color-background-primary); background: var(--color-text-success); border: none; border-radius: var(--border-radius-md); padding: 7px 12px; cursor: pointer; }
+.dl-btn:hover { opacity: .85; }
 .history-list { display: flex; flex-direction: column; gap: 8px; }
-.history-item { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: border-color .15s; border: 0.5px solid var(--color-border-tertiary); }
+.history-item { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; border: 0.5px solid var(--color-border-tertiary); }
 .history-item:hover { border-color: var(--color-border-secondary); }
-.history-meta { font-size: 11px; color: var(--color-text-tertiary); margin: 2px 0 0; }
 .history-title { font-size: 13px; font-weight: 500; color: var(--color-text-primary); margin: 0; }
+.history-meta { font-size: 11px; color: var(--color-text-tertiary); margin: 2px 0 0; }
 .history-del { font-size: 11px; color: var(--color-text-tertiary); background: none; border: none; cursor: pointer; }
 .history-del:hover { color: var(--color-text-danger); }
-.reminder-box { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 12px 14px; margin-bottom: 12px; }
-.reminder-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-.reminder-label { font-size: 13px; color: var(--color-text-primary); }
-.reminder-note { font-size: 11px; color: var(--color-text-tertiary); margin: 4px 0 0; }
+.reminder-box { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 12px 14px; margin-bottom: 10px; }
+.reminder-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
 .toggle { position: relative; width: 32px; height: 18px; }
 .toggle input { opacity: 0; width: 0; height: 0; }
 .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: var(--color-border-secondary); border-radius: 9px; transition: .2s; }
@@ -71,14 +71,12 @@ hr.d { border: none; border-top: 0.5px solid var(--color-border-tertiary); margi
 <div class="tabs">
   <button class="tab on" onclick="sw(0)">📝 報告書を作る</button>
   <button class="tab" onclick="sw(1)">📁 履歴</button>
-  <button class="tab" onclick="sw(2)">🔔 リマインド設定</button>
+  <button class="tab" onclick="sw(2)">🔔 リマインド</button>
 </div>
 
-<!-- 報告書を作る -->
 <div class="pnl on" id="p0">
   <p class="slbl">クライアントを選ぶ</p>
   <div class="client-selector" id="client-selector"></div>
-
   <hr class="d">
   <p class="slbl">基本情報</p>
   <div class="row2">
@@ -95,7 +93,6 @@ hr.d { border: none; border-top: 0.5px solid var(--color-border-tertiary); margi
       </select>
     </div>
   </div>
-
   <hr class="d">
   <p class="slbl">作業テンプレート</p>
   <div class="info">💾 保存すると次回から自動で読み込まれます</div>
@@ -117,68 +114,57 @@ hr.d { border: none; border-top: 0.5px solid var(--color-border-tertiary); margi
     <span>合計時間</span>
     <span id="total-val" style="font-weight:500;color:var(--color-text-primary)">0h</span>
   </div>
-
   <div class="btn-row">
     <button class="save-btn" onclick="saveTemplate()">💾 保存</button>
     <button class="gen-btn" id="gen-btn" onclick="generate()" disabled>AIで報告書を生成する</button>
   </div>
   <div class="loading" id="loading">AIが日付に割り振り中...</div>
-
   <div class="result-wrap" id="result-wrap">
     <hr class="d">
-    <p class="slbl">生成された報告書（セルをクリックして編集できます）</p>
+    <p class="slbl">生成された報告書（クリックして編集できます）</p>
     <table class="result-table">
-      <thead><tr><th>日付</th><th>曜日</th><th>時間帯</th><th>作業内容</th></tr></thead>
+      <thead><tr><th>日付</th><th>曜日</th><th>開始時間</th><th>終了時間</th><th>作業内容</th></tr></thead>
       <tbody id="result-body"></tbody>
     </table>
     <div id="adjust-notice" style="display:none;margin-bottom:8px"></div>
     <div class="action-row">
-      <button class="copy-btn" onclick="saveHistory()">📁 履歴に保存</button>
-      <button class="copy-btn" onclick="copyTSV()">スプレッドシート用にコピー</button>
+      <button class="action-btn" onclick="saveHistory()">📁 履歴に保存</button>
+      <button class="action-btn" onclick="copyTSV()">シートにコピー</button>
+      <button class="dl-btn" onclick="downloadExcel()">⬇️ Excelダウンロード</button>
     </div>
   </div>
 </div>
 
-<!-- 履歴 -->
 <div class="pnl" id="p1">
   <p class="slbl">過去の報告書</p>
-  <div id="history-list"><div class="empty">まだ履歴がありません。<br>報告書を生成して「履歴に保存」してください。</div></div>
+  <div id="history-list"><div class="empty">まだ履歴がありません</div></div>
 </div>
 
-<!-- リマインド設定 -->
 <div class="pnl" id="p2">
   <p class="slbl">月末リマインド</p>
-  <div class="info">💡 ブラウザの通知を使って月末前にお知らせします。このページを開いているときに動作します。</div>
-
+  <div class="info">💡 ブラウザの通知でお知らせします</div>
   <div class="reminder-box">
     <div class="reminder-row">
-      <span class="reminder-label">月末3日前に通知</span>
+      <span style="font-size:13px;color:var(--color-text-primary)">月末3日前に通知</span>
       <label class="toggle"><input type="checkbox" id="remind-3" onchange="saveReminder()"><span class="toggle-slider"></span></label>
     </div>
-    <p class="reminder-note">毎月28日ごろに「報告書の締め切りが近いです」と通知</p>
+    <p style="font-size:11px;color:var(--color-text-tertiary);margin:0">毎月28日ごろに通知</p>
   </div>
-
   <div class="reminder-box">
     <div class="reminder-row">
-      <span class="reminder-label">月末当日に通知</span>
+      <span style="font-size:13px;color:var(--color-text-primary)">月末当日に通知</span>
       <label class="toggle"><input type="checkbox" id="remind-1" onchange="saveReminder()"><span class="toggle-slider"></span></label>
     </div>
-    <p class="reminder-note">月の最終日に「今日が締め切りです」と通知</p>
+    <p style="font-size:11px;color:var(--color-text-tertiary);margin:0">月の最終日に通知</p>
   </div>
-
-  <hr class="d">
-  <p class="slbl">通知テスト</p>
-  <button class="add-btn" onclick="testNotification()">🔔 今すぐテスト通知を送る</button>
-  <p style="font-size:11px;color:var(--color-text-tertiary);margin:4px 0 0;line-height:1.5">※ 初回はブラウザの通知許可が必要です。許可すると月末に自動でお知らせします。</p>
+  <button class="add-btn" onclick="testNotification()">🔔 テスト通知を送る</button>
 </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 const typeLabel = { dev:'開発・制作系', meeting:'ミーティング', review:'確認・レビュー', other:'その他' };
-let tasks = [];
-let clients = [];
-let currentClient = null;
-let historyData = [];
+let tasks = [], clients = [], currentClient = null;
 
 const today = new Date();
 document.getElementById('month').value = today.toISOString().slice(0,7);
@@ -187,19 +173,12 @@ document.getElementById('workdays').value = 20;
 function sw(n) {
   document.querySelectorAll('.pnl').forEach((e,i) => e.classList.toggle('on', i===n));
   document.querySelectorAll('.tab').forEach((e,i) => e.classList.toggle('on', i===n));
-  if (n === 1) renderHistory();
+  if (n===1) renderHistory();
 }
 
-// クライアント管理
 async function loadClients() {
-  try {
-    const r = await window.storage.get('clients');
-    if (r) clients = JSON.parse(r.value);
-  } catch(e) { clients = []; }
-  if (clients.length === 0) {
-    clients = [{ id: 'default', name: 'クライアントA' }];
-    await saveClients();
-  }
+  try { const r = await window.storage.get('clients'); if (r) clients = JSON.parse(r.value); } catch(e) {}
+  if (!clients.length) { clients = [{ id:'default', name:'クライアントA' }]; await saveClients(); }
   currentClient = clients[0].id;
   renderClients();
   await loadTemplate();
@@ -210,60 +189,49 @@ async function saveClients() {
 }
 
 function renderClients() {
-  const el = document.getElementById('client-selector');
-  el.innerHTML = clients.map(c => `
-    <button class="client-chip ${c.id === currentClient ? 'on' : ''}" onclick="selectClient('${c.id}')">${c.name}</button>
-  `).join('') + `<button class="client-chip add" onclick="addClient()">＋ 追加</button>`;
+  document.getElementById('client-selector').innerHTML =
+    clients.map(c => `<button class="client-chip ${c.id===currentClient?'on':''}" onclick="selectClient('${c.id}')">${c.name}</button>`).join('') +
+    `<button class="client-chip add" onclick="addClient()">＋ 追加</button>`;
 }
 
 async function selectClient(id) {
-  currentClient = id;
-  renderClients();
-  tasks = [];
-  renderTasks();
+  currentClient = id; tasks = [];
+  renderClients(); renderTasks();
   document.getElementById('result-wrap').style.display = 'none';
   document.getElementById('gen-btn').disabled = true;
   await loadTemplate();
 }
 
 async function addClient() {
-  const name = prompt('クライアント名を入力してください（例：クライアントB）');
+  const name = prompt('クライアント名を入力してください');
   if (!name) return;
   const id = 'client_' + Date.now();
   clients.push({ id, name });
   await saveClients();
-  currentClient = id;
-  tasks = [];
-  renderTasks();
-  renderClients();
+  currentClient = id; tasks = [];
+  renderClients(); renderTasks();
 }
 
-// テンプレート保存・読み込み
 async function loadTemplate() {
   try {
     const r = await window.storage.get('template_' + currentClient);
     if (!r) return;
-    const saved = JSON.parse(r.value);
-    if (saved.name) document.getElementById('name').value = saved.name;
-    if (saved.workdays) document.getElementById('workdays').value = saved.workdays;
-    if (saved.pattern) document.getElementById('pattern').value = saved.pattern;
-    if (saved.tasks?.length > 0) {
-      tasks = saved.tasks;
-      renderTasks();
-      document.getElementById('gen-btn').disabled = false;
-    }
+    const s = JSON.parse(r.value);
+    if (s.name) document.getElementById('name').value = s.name;
+    if (s.workdays) document.getElementById('workdays').value = s.workdays;
+    if (s.pattern) document.getElementById('pattern').value = s.pattern;
+    if (s.tasks?.length) { tasks = s.tasks; renderTasks(); document.getElementById('gen-btn').disabled = false; }
   } catch(e) {}
 }
 
 async function saveTemplate() {
-  const data = {
-    name: document.getElementById('name').value,
-    workdays: document.getElementById('workdays').value,
-    pattern: document.getElementById('pattern').value,
-    tasks
-  };
   try {
-    await window.storage.set('template_' + currentClient, JSON.stringify(data));
+    await window.storage.set('template_' + currentClient, JSON.stringify({
+      name: document.getElementById('name').value,
+      workdays: document.getElementById('workdays').value,
+      pattern: document.getElementById('pattern').value,
+      tasks
+    }));
     const btn = document.querySelector('.save-btn');
     btn.textContent = '✓ 保存済み';
     setTimeout(() => btn.textContent = '💾 保存', 2000);
@@ -283,9 +251,8 @@ function addTask() {
 }
 
 function removeTask(i) {
-  tasks.splice(i, 1);
-  renderTasks();
-  if (tasks.length === 0) document.getElementById('gen-btn').disabled = true;
+  tasks.splice(i, 1); renderTasks();
+  if (!tasks.length) document.getElementById('gen-btn').disabled = true;
 }
 
 function renderTasks() {
@@ -295,9 +262,8 @@ function renderTasks() {
       <span class="task-hours">${t.hours}h</span>
       <span class="task-type">${typeLabel[t.type]}</span>
       <button class="task-del" onclick="removeTask(${i})">削除</button>
-    </div>
-  `).join('');
-  const total = tasks.reduce((s,t) => s + t.hours, 0);
+    </div>`).join('');
+  const total = tasks.reduce((s,t) => s+t.hours, 0);
   document.getElementById('total-bar').style.display = tasks.length ? 'flex' : 'none';
   document.getElementById('total-val').textContent = total + 'h';
 }
@@ -305,18 +271,23 @@ function renderTasks() {
 function getDatesInMonth(yearMonth, workdays, pattern) {
   const [year, month] = yearMonth.split('-').map(Number);
   const allDays = [];
-  const daysInMonth = new Date(year, month, 0).getDate();
-  for (let d = 1; d <= daysInMonth; d++) {
+  const dim = new Date(year, month, 0).getDate();
+  for (let d=1; d<=dim; d++) {
     const date = new Date(year, month-1, d);
     const dow = date.getDay();
-    if (pattern === 'weekday' && (dow === 0 || dow === 6)) continue;
-    if (pattern === 'threeday' && dow !== 1 && dow !== 3 && dow !== 5) continue;
+    if (pattern==='weekday' && (dow===0||dow===6)) continue;
+    if (pattern==='threeday' && dow!==1&&dow!==3&&dow!==5) continue;
     allDays.push(date);
   }
   return allDays.slice(0, workdays).sort((a,b) => a-b);
 }
 
 function getDow(date) { return ['日','月','火','水','木','金','土'][date.getDay()]; }
+
+function parseTime(timeRange) {
+  const parts = timeRange.split('-');
+  return { start: parts[0]?.trim() || '', end: parts[1]?.trim() || '' };
+}
 
 async function generate() {
   const name = document.getElementById('name').value || '担当者';
@@ -335,13 +306,13 @@ async function generate() {
 稼働日：${dates.map(d=>d.getDate()+'日').join('、')}
 作業：${tasks.map(t=>`${t.name}(${typeLabel[t.type]})${t.hours}h`).join('、')}
 JSONのみ返してください：{"rows":[{"day":数字,"timeRange":"9:00-18:00","work":"作業内容"},...],"adjustNote":"補足or空文字"}
-ルール：ミーティングは1h、開発系は長め、時間が合わない場合はその他・調整で補完、workはビジネス日本語で`;
+ルール：ミーティングは1h（例13:00-14:00）、開発系は長め（例9:00-18:00）、時間が合わない場合はその他・調整で補完、workはビジネス日本語で`;
 
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 2000, messages: [{ role: 'user', content: prompt }] })
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 2000, messages: [{ role:'user', content: prompt }] })
     });
     const data = await res.json();
     const parsed = JSON.parse(data.content[0].text.replace(/```json|```/g,'').trim());
@@ -349,13 +320,15 @@ JSONのみ返してください：{"rows":[{"day":数字,"timeRange":"9:00-18:00
 
     window._currentResult = { month, name, client: currentClient, rows: parsed.rows };
 
-    document.getElementById('result-body').innerHTML = parsed.rows.map((row,i) => {
+    document.getElementById('result-body').innerHTML = parsed.rows.map((row) => {
       const date = new Date(year, mon-1, row.day);
+      const { start, end } = parseTime(row.timeRange);
       const isOther = row.work.includes('その他') || row.work.includes('調整');
       return `<tr class="${isOther?'warn-row':''}">
         <td>${month.replace('-','/')}/${String(row.day).padStart(2,'0')}</td>
         <td>${getDow(date)}</td>
-        <td><input value="${row.timeRange}"></td>
+        <td><input value="${start}"></td>
+        <td><input value="${end}"></td>
         <td><input value="${row.work}"></td>
       </tr>`;
     }).join('');
@@ -373,19 +346,56 @@ JSONのみ返してください：{"rows":[{"day":数字,"timeRange":"9:00-18:00
   btn.disabled = false;
 }
 
-// 履歴
+function getTableRows() {
+  return Array.from(document.querySelectorAll('#result-body tr')).map(tr => {
+    const inputs = tr.querySelectorAll('input');
+    const cells = tr.querySelectorAll('td');
+    return {
+      date: cells[0].textContent,
+      dow: cells[1].textContent,
+      start: inputs[0].value,
+      end: inputs[1].value,
+      work: inputs[2].value
+    };
+  });
+}
+
+function downloadExcel() {
+  const month = document.getElementById('month').value;
+  const name = document.getElementById('name').value || '担当者';
+  const clientName = clients.find(c => c.id === currentClient)?.name || 'クライアント';
+  const rows = getTableRows();
+
+  const wsData = [
+    ['日付', '曜日', '開始時間', '終了時間', '作業内容'],
+    ...rows.map(r => [r.date, r.dow, r.start, r.end, r.work])
+  ];
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+  // 列幅設定
+  ws['!cols'] = [{ wch: 12 }, { wch: 6 }, { wch: 10 }, { wch: 10 }, { wch: 40 }];
+
+  XLSX.utils.book_append_sheet(wb, ws, month);
+  XLSX.writeFile(wb, `作業報告書_${clientName}_${month}_${name}.xlsx`);
+}
+
+function copyTSV() {
+  const rows = getTableRows();
+  const tsv = rows.map(r => [r.date, r.dow, r.start, r.end, r.work].join('\t')).join('\n');
+  navigator.clipboard.writeText(tsv).then(() => alert('コピーしました！スプレッドシートに貼り付けできます。'));
+}
+
 async function saveHistory() {
   if (!window._currentResult) return;
-  const rows = Array.from(document.querySelectorAll('#result-body tr')).map(tr => {
-    const cells = tr.querySelectorAll('td');
-    return { date: cells[0].textContent, dow: cells[1].textContent, timeRange: cells[2].querySelector('input').value, work: cells[3].querySelector('input').value };
-  });
+  const rows = getTableRows();
   const entry = { id: Date.now(), ...window._currentResult, rows, savedAt: new Date().toLocaleDateString('ja-JP') };
   try {
     const r = await window.storage.get('history');
     const existing = r ? JSON.parse(r.value) : [];
     existing.unshift(entry);
-    await window.storage.set('history', JSON.stringify(existing.slice(0, 20)));
+    await window.storage.set('history', JSON.stringify(existing.slice(0,20)));
     const btn = event.target;
     btn.textContent = '✓ 保存しました';
     setTimeout(() => btn.textContent = '📁 履歴に保存', 2000);
@@ -397,13 +407,13 @@ async function renderHistory() {
     const r = await window.storage.get('history');
     const list = r ? JSON.parse(r.value) : [];
     const el = document.getElementById('history-list');
-    if (list.length === 0) { el.innerHTML = '<div class="empty">まだ履歴がありません。<br>報告書を生成して「履歴に保存」してください。</div>'; return; }
+    if (!list.length) { el.innerHTML = '<div class="empty">まだ履歴がありません</div>'; return; }
     el.innerHTML = '<div class="history-list">' + list.map(item => {
-      const clientName = clients.find(c => c.id === item.client)?.name || 'クライアント';
+      const cName = clients.find(c => c.id === item.client)?.name || 'クライアント';
       return `<div class="history-item" onclick="loadHistory(${item.id})">
         <div>
-          <p class="history-title">${item.month} ${clientName}</p>
-          <p class="history-meta">${item.name}・${item.rows?.length || 0}日分・保存日: ${item.savedAt}</p>
+          <p class="history-title">${item.month} ${cName}</p>
+          <p class="history-meta">${item.name}・${item.rows?.length||0}日分・${item.savedAt}</p>
         </div>
         <button class="history-del" onclick="event.stopPropagation();deleteHistory(${item.id})">削除</button>
       </div>`;
@@ -415,16 +425,16 @@ async function loadHistory(id) {
   try {
     const r = await window.storage.get('history');
     const list = r ? JSON.parse(r.value) : [];
-    const item = list.find(i => i.id === id);
+    const item = list.find(i => i.id===id);
     if (!item) return;
     sw(0);
     document.getElementById('month').value = item.month;
     window._currentResult = item;
     document.getElementById('result-body').innerHTML = item.rows.map(row => `
       <tr><td>${row.date}</td><td>${row.dow}</td>
-      <td><input value="${row.timeRange}"></td>
-      <td><input value="${row.work}"></td></tr>
-    `).join('');
+      <td><input value="${row.start||''}"></td>
+      <td><input value="${row.end||''}"></td>
+      <td><input value="${row.work}"></td></tr>`).join('');
     document.getElementById('result-wrap').style.display = 'block';
     document.getElementById('adjust-notice').style.display = 'none';
   } catch(e) {}
@@ -434,36 +444,32 @@ async function deleteHistory(id) {
   try {
     const r = await window.storage.get('history');
     const list = r ? JSON.parse(r.value) : [];
-    await window.storage.set('history', JSON.stringify(list.filter(i => i.id !== id)));
+    await window.storage.set('history', JSON.stringify(list.filter(i => i.id!==id)));
     renderHistory();
   } catch(e) {}
 }
 
-// リマインド
 async function loadReminder() {
   try {
     const r = await window.storage.get('reminder');
     if (!r) return;
-    const saved = JSON.parse(r.value);
-    document.getElementById('remind-3').checked = saved.remind3 || false;
-    document.getElementById('remind-1').checked = saved.remind1 || false;
+    const s = JSON.parse(r.value);
+    document.getElementById('remind-3').checked = s.remind3||false;
+    document.getElementById('remind-1').checked = s.remind1||false;
   } catch(e) {}
   checkReminder();
 }
 
 async function saveReminder() {
-  const data = { remind3: document.getElementById('remind-3').checked, remind1: document.getElementById('remind-1').checked };
-  try { await window.storage.set('reminder', JSON.stringify(data)); } catch(e) {}
+  try { await window.storage.set('reminder', JSON.stringify({ remind3: document.getElementById('remind-3').checked, remind1: document.getElementById('remind-1').checked })); } catch(e) {}
 }
 
 function checkReminder() {
   const now = new Date();
   const lastDay = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
-  const today = now.getDate();
-  const remind3 = document.getElementById('remind-3').checked;
-  const remind1 = document.getElementById('remind-1').checked;
-  if (remind3 && lastDay - today <= 3) sendNotification('📝 報告書の締め切りが近づいています', '月末まであと数日です。報告書を忘れずに！');
-  if (remind1 && today === lastDay) sendNotification('📝 今日が報告書の締め切りです', '作業報告書をクライアントに送りましょう！');
+  const d = now.getDate();
+  if (document.getElementById('remind-3').checked && lastDay-d<=3) sendNotification('📝 報告書の締め切りが近づいています', '月末まであと数日です！');
+  if (document.getElementById('remind-1').checked && d===lastDay) sendNotification('📝 今日が報告書の締め切りです', '作業報告書を送りましょう！');
 }
 
 async function testNotification() {
@@ -473,16 +479,8 @@ async function testNotification() {
 async function sendNotification(title, body) {
   if (!('Notification' in window)) { alert('このブラウザは通知に対応していません'); return; }
   const perm = await Notification.requestPermission();
-  if (perm === 'granted') new Notification(title, { body });
-  else alert('通知の許可が必要です。ブラウザの設定から許可してください。');
-}
-
-function copyTSV() {
-  const rows = document.querySelectorAll('#result-body tr');
-  const tsv = Array.from(rows).map(tr =>
-    Array.from(tr.querySelectorAll('td')).map(td => { const i = td.querySelector('input'); return i ? i.value : td.textContent; }).join('\t')
-  ).join('\n');
-  navigator.clipboard.writeText(tsv).then(() => alert('コピーしました！Googleスプレッドシートにそのまま貼り付けできます。'));
+  if (perm==='granted') new Notification(title, { body });
+  else alert('通知の許可が必要です');
 }
 
 loadClients();
